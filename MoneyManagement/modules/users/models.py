@@ -69,7 +69,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 	objects = UserManager()
 
 	class Meta:
-		verbose_name_plural = '1. Users'
 		ordering = ['-created']
 		unique_together = ('phone_country_code', 'phone')
 
