@@ -21,7 +21,7 @@ class UserAdmin(BaseUserAdmin):
 	)
 
 	# List display Settings
-	list_display = ('id', 'email', 'phone', 'created', 'refer_source', 'last_login_ip',)
+	list_display = ('id', 'email', 'phone', 'created',)
 	search_fields = ('email', 'phone',)
 	list_filter = ('created',)
 	ordering = ('created',)
@@ -29,31 +29,11 @@ class UserAdmin(BaseUserAdmin):
 	# Detail Page Settings
 	fieldsets = (
 		('User Info', {'fields': ('email', 'phone_country_code', 'phone', 'password',)}),
-		('User Extension', {'fields': ('edit_investor', 'edit_company_user')}),
-		('Reference', {'fields': ('refer_source',)}),
-		('Permissions', {'fields': ('is_investor', 'is_company_user', 'is_analyst', 'is_active', 'is_staff',)}),
-		('Security', {'fields': ('last_login', 'last_login_ip', 'TOTP_enabled',)}),
+		('Permissions', {'fields': ('is_active', 'is_staff',)}),
 		('Timestamp', {'fields': ('created', 'updated',)}),
 	)
 	readonly_fields = ('created', 'updated',
-	                   'last_login', 'last_login_ip', 'TOTP_enabled',
-	                   # 'is_investor', 'is_company_user', 'is_analyst',
-	                   'is_active', 'is_staff',
-	                   'edit_investor', 'edit_company_user')
-
-	def edit_investor(self, obj):
-		if obj.is_investor:
-			change_url = reverse('admin:users_investoruser_change', args=(obj.investor.id,))
-			return mark_safe('<a href="%s">%s</a>' % (change_url, obj.investor.full_name))
-		else:
-			return '-'
-
-	def edit_company_user(self, obj):
-		if obj.is_company_user:
-			change_url = reverse('admin:users_companyuser_change', args=(obj.company_user.id,))
-			return mark_safe('<a href="%s">%s</a>' % (change_url, obj.company_user))
-		else:
-			return '-'
+	                   'is_active', 'is_staff')
 
 
 admin.site.unregister(BuiltInGroup)

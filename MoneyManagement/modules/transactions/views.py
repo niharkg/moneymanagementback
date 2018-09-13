@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import FormParser, JSONParser
 
-from .serializers import ListCompanySerializer, FullCompanySerializer, FullPressReleaseSerializer, FullWhitelistSerializer, ListInvestRecordSerializer
-from .models import Company, PressRelease, Whitelist, InvestRecord
+from .serializers import TransactionSerializer
+from .models import Transaction
 
 
 class CompanyViewSet(viewsets.ViewSet):

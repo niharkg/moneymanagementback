@@ -112,7 +112,7 @@ MoneyManagement/settings/securities/
 
 MoneyManagement/modules/wallets/migrations/
 MoneyManagement/modules/users/migrations/*
-MoneyManagement/modules/records/migrations/*
+MoneyManagement/modules/transactions/migrations/*
 
 ~MoneyManagement/modules/wallets/migrations/__init__.py
 ~MoneyManagement/modules/users/migrations/__init__.py

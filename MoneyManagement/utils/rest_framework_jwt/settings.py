@@ -6,14 +6,14 @@ from rest_framework.settings import APISettings
 USER_SETTINGS = getattr(settings, 'JWT_AUTH', None)
 
 DEFAULTS = {
-	'JWT_ENCODE_HANDLER'             : 'Gullin.utils.rest_framework_jwt.utils.jwt_encode_handler',
-	'JWT_DECODE_HANDLER'             : 'Gullin.utils.rest_framework_jwt.utils.jwt_decode_handler',
-	'JWT_PAYLOAD_HANDLER'            : 'Gullin.utils.rest_framework_jwt.utils.jwt_payload_handler',
-	'JWT_PAYLOAD_GET_USER_ID_HANDLER': 'Gullin.utils.rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+	'JWT_ENCODE_HANDLER'             : 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_encode_handler',
+	'JWT_DECODE_HANDLER'             : 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_decode_handler',
+	'JWT_PAYLOAD_HANDLER'            : 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_payload_handler',
+	'JWT_PAYLOAD_GET_USER_ID_HANDLER': 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
 	'JWT_PRIVATE_KEY'                : None,
 	'JWT_PUBLIC_KEY'                 : None,
-	'JWT_PAYLOAD_GET_EMAIL_HANDLER'  : 'Gullin.utils.rest_framework_jwt.utils.jwt_get_email_from_payload_handler',
-	'JWT_RESPONSE_PAYLOAD_HANDLER'   : 'Gullin.utils.rest_framework_jwt.utils.jwt_response_payload_handler',
+	'JWT_PAYLOAD_GET_EMAIL_HANDLER'  : 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_get_email_from_payload_handler',
+	'JWT_RESPONSE_PAYLOAD_HANDLER'   : 'MoneyManagement.utils.rest_framework_jwt.utils.jwt_response_payload_handler',
 	'JWT_SECRET_KEY'                 : settings.SECRET_KEY,
 	'JWT_GET_USER_SECRET_KEY'        : None,
 	'JWT_ALGORITHM'                  : 'HS256',

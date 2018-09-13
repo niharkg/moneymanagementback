@@ -35,7 +35,7 @@ INSTALLED_APPS = [
 	'MoneyManagement.utils.rest_framework_jwt',
 	# modules
 	'MoneyManagement.modules.users',
-	'MoneyManagement.modules.records',
+	'MoneyManagement.modules.transactions',
 ]
 
 MIDDLEWARE = [
@@ -68,7 +68,7 @@ TEMPLATES = [
 	},
 ]
 
-WSGI_APPLICATION = 'Gullin.wsgi.application'
+WSGI_APPLICATION = 'MoneyManagement.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -114,7 +114,7 @@ REST_FRAMEWORK = {
 		'rest_framework.permissions.IsAuthenticatedOrReadOnly',
 	),
 	'DEFAULT_AUTHENTICATION_CLASSES': (
-		'Gullin.utils.rest_framework_jwt.authentication.BaseJSONWebTokenAuthentication',
+		'MoneyManagement.utils.rest_framework_jwt.authentication.BaseJSONWebTokenAuthentication',
 	),
 	'DEFAULT_RENDERER_CLASSES'      : (
 		'rest_framework.renderers.JSONRenderer',
@@ -181,8 +181,8 @@ DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AWS SES Email Service
 AWS_SES_REGION_NAME = 'us-east-1'
-EMAIL_BACKEND = 'Gullin.utils.send.email.SESBackend'
-EMAIL_SEND_FROM = 'Gullin <noreply@gullin.io>'
+EMAIL_BACKEND = 'MoneyManagement.utils.send.email.SESBackend'
+EMAIL_SEND_FROM = 'MoneyManagement <noreply@gullin.io>'
 # Async Email Sending Backend
 # TODO
 # EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'

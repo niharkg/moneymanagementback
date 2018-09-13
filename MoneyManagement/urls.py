@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from MoneyManagement.modules.users import urls as user_urls
-from MoneyManagement.modules.records import urls as records_urls
+from MoneyManagement.modules.transactions import urls as records_urls
 
 urlpatterns = [
 	path('admin/', admin.site.urls),
