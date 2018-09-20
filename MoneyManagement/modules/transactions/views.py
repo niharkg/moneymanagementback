@@ -9,7 +9,7 @@ from .serializers import TransactionSerializer
 from .models import Transaction
 
 
-class CompanyViewSet(viewsets.ViewSet):
+class TransactionViewSet(viewsets.ViewSet):
 	"""
 	The viewset for company module
 	"""
@@ -53,26 +53,3 @@ class CompanyViewSet(viewsets.ViewSet):
 				return Response(serializer.data)
 
 		return Response(status=status.HTTP_404_NOT_FOUND)
-
-	def press_releases(self, request):
-		# TODO: Pagination
-		press_releases = PressRelease.objects.all()
-		serializer = FullPressReleaseSerializer(press_releases, many=True)
-		return Response(serializer.data)
-
-
-class CompanyPortalViewSet(viewsets.ViewSet):
-	parser_classes = (FormParser, JSONParser)
-	permission_classes = (IsAuthenticated,)
-
-	def whitelist(self, request):
-		if request.user.is_company_user:
-			company = Whitelist.objects.filter(company=request.user.company_user.company.id)
-			serializer = FullWhitelistSerializer(company, many=True)
-			return Response(serializer.data)
-
-	def list_invest_records(self, request):
-		if request.user.is_company_user:
-			records = InvestRecord.objects.filter(company__id=request.user.company_user.company.id)
-			serializer = ListInvestRecordSerializer(records, many=True)
-			return Response(serializer.data)

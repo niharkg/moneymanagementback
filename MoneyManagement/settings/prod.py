@@ -29,7 +29,6 @@ INSTALLED_APPS = [
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 	# installed packages
-	# 'django_celery_results',
 	'corsheaders',
 	# customized utils
 	'MoneyManagement.utils.rest_framework_jwt',
