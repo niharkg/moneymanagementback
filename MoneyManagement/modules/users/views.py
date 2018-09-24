@@ -30,23 +30,6 @@ class UserAuthViewSet(viewsets.ViewSet):
 		serializer.is_valid(raise_exception=True)
 		user = serializer.save()
 
-		# All User created through this method is investor,
-		# so we should create a InvestorUser instance and bind to new created User
-		investor = User.objects.create(first_name=request.data.get('first_name'),
-		                                       last_name=request.data.get('last_name'))
-		user.investor = investor
-		user.save()
-
-		# Send user verification email when user register
-		verification_code = user.verification_code
-		verification_code.refresh()
-		ctx = {
-			'user_full_name'   : investor.full_name,
-			'verification_code': verification_code.code,
-			'user_email'       : user.email
-		}
-		send_email([user.email], 'Gullin - Welcome! Please Verify Your Email', 'welcome_and_email_verification', ctx)
-
 		# Get user auth token
 		payload = jwt_settings.JWT_PAYLOAD_HANDLER(user)
 		token = jwt_settings.JWT_ENCODE_HANDLER(payload)
@@ -98,7 +81,7 @@ class UserAuthViewSet(viewsets.ViewSet):
 
 			# Generate Response
 			# Add user to the response data
-			serializer = FullUserSerializer(user.investor)
+			serializer = FullUserSerializer(user)
 
 			response = Response(serializer.data, status=status.HTTP_200_OK)
 			# Add cookie to the response data
@@ -113,11 +96,9 @@ class UserAuthViewSet(viewsets.ViewSet):
 	def forget_password(self, request):
 		if request.method == 'GET':
 			# Send code
-			email_or_phone = request.query_params.get('u')
-			if not email_or_phone:
-				return Response({'error': 'Must provide email or phone.'}, status=status.HTTP_400_BAD_REQUEST)
+			email = request.query_params.get('u')
+			user = User.objects.filter(email=email)
 
-			user = User.objects.filter(email=email_or_phone)
 			# email
 			if user:
 				user = user[0]
@@ -127,11 +108,11 @@ class UserAuthViewSet(viewsets.ViewSet):
 				verification_code = user.verification_code
 				verification_code.refresh()
 				ctx = {
-					'user_full_name'   : user.investor.full_name,
+					'user_full_name'   : user.full_name,
 					'verification_code': verification_code.code,
 					'user_email'       : user.email
 				}
-				send_email([user.email], 'Gullin - Verification Code', 'verification_code', ctx)
+				send_email([user.email], 'Verification Code', 'verification_code', ctx)
 
 				msg = {'data': 'We have sent a verification code to your email, please verify.'}
 
@@ -181,23 +162,21 @@ class UserViewSet(viewsets.ViewSet):
 	def me(self, request):
 		if request.method == 'GET':
 			# Retrieve self
-			serializer = FullUserSerializer(request.user.investor)
+			serializer = FullUserSerializer(request.user)
 			return Response(serializer.data)
 
 		elif request.method == 'PATCH':
-			# Return error message if user is not investor
-
-			# Update Birthday
+			# Update Name
 			if request.data.get('update'):
-				investor_user = request.user.investor
+				user = request.user
 
 				if request.data.get('first_name'):
 					request.user.first_name = request.data.get('first_name')
 				if request.data.get('last_name'):
 					request.user.last_name = request.data.get('last_name')
-				investor_user.save()
+					user.save()
 
-				serializer = FullUserSerializer(request.user.investor)
+				serializer = FullUserSerializer(request.user)
 				return Response(serializer.data, status=status.HTTP_200_OK)
 
 	def change_password(self, request):

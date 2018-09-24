@@ -1,5 +1,9 @@
-from django.db import models
+import random
+import string
+from datetime import timedelta
 
+from django.utils import timezone
+from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 
@@ -46,8 +50,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 	# User Login
 	email = models.EmailField(unique=True, blank=True,
 	                          error_messages={'unique': "A user with that email already exists."})
-	phone_country_code = models.CharField(max_length=30, null=True, blank=True)
-	phone = models.CharField(max_length=30, null=True, blank=True)
+
+	first_name = models.CharField(max_length=30)
+	last_name = models.CharField(max_length=30)
 
 	# Permissions
 	is_staff = models.BooleanField(
@@ -70,9 +75,37 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 	class Meta:
 		ordering = ['-created']
-		unique_together = ('phone_country_code', 'phone')
 
 	def __str__(self):
 		return self.email
 
+	@property
+	def full_name(self):
+		return self.first_name + ' ' + self.last_name
 
+
+class VerificationCode(models.Model):
+	"""
+	Verification Code model
+	For verify user email
+	"""
+
+	user = models.OneToOneField('User', related_name='verification_code', on_delete=models.PROTECT)
+	code = models.CharField(max_length=200)
+	expire_time = models.DateTimeField(default=timezone.now)
+
+	class Meta:
+		verbose_name_plural = 'Verification Codes'
+
+	@property
+	def is_expired(self):
+		return timezone.now() > self.expire_time
+
+	def expire(self):
+		self.expire_time = timezone.now()
+		self.save()
+
+	def refresh(self):
+		self.code = ''.join([random.choice(string.digits) for n in range(6)])
+		self.expire_time = timezone.now() + timedelta(minutes=5)
+		self.save()

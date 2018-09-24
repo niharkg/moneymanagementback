@@ -22,5 +22,5 @@ from MoneyManagement.modules.transactions import urls as records_urls
 urlpatterns = [
 	path('admin/', admin.site.urls),
 	path('user/', include(user_urls)),
-	path('company/', include(records_urls)),
+	path('transactions/', include(records_urls)),
 ]

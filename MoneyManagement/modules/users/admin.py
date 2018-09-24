@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group as BuiltInGroup
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from .models import User
+from .models import User, VerificationCode
 from .forms import UserCreationForm
 
 
@@ -21,14 +21,14 @@ class UserAdmin(BaseUserAdmin):
 	)
 
 	# List display Settings
-	list_display = ('id', 'email', 'phone', 'created',)
-	search_fields = ('email', 'phone',)
+	list_display = ('id', 'email', 'created',)
+	search_fields = ('email',)
 	list_filter = ('created',)
 	ordering = ('created',)
 
 	# Detail Page Settings
 	fieldsets = (
-		('User Info', {'fields': ('email', 'phone_country_code', 'phone', 'password',)}),
+		('User Info', {'fields': ('email', 'password', 'first_name', 'last_name')}),
 		('Permissions', {'fields': ('is_active', 'is_staff',)}),
 		('Timestamp', {'fields': ('created', 'updated',)}),
 	)
@@ -37,3 +37,24 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.unregister(BuiltInGroup)
+
+
+@admin.register(VerificationCode)
+class VerificationCodeAdmin(admin.ModelAdmin):
+	# List display Settings
+	list_display = ('user', 'code', 'expire_time', 'is_expired',)
+	search_fields = ('user',)
+	# list_filter = ('is_expired',)
+	ordering = ('expire_time',)
+
+	# Detail Page Settings
+	fieldsets = (
+		('Base User', {'fields': ('edit_user',)}),
+		('Code', {'fields': ('code',)}),
+		('Timestamp', {'fields': ('expire_time', 'is_expired',)}),
+	)
+	readonly_fields = ('edit_user', 'is_expired',)
+
+	def edit_user(self, obj):
+		change_url = reverse('admin:users_user_change', args=(obj.user.id,))
+		return mark_safe('<a href="%s">%s</a>' % (change_url, obj.user.email))
