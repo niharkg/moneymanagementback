@@ -28,7 +28,7 @@ class UserAdmin(BaseUserAdmin):
 
 	# Detail Page Settings
 	fieldsets = (
-		('User Info', {'fields': ('email', 'password', 'first_name', 'last_name')}),
+		('User Info', {'fields': ('email', 'password', 'first_name', 'last_name', 'user_id')}),
 		('Permissions', {'fields': ('is_active', 'is_staff',)}),
 		('Timestamp', {'fields': ('created', 'updated',)}),
 	)

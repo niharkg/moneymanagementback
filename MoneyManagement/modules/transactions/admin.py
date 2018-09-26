@@ -12,7 +12,7 @@ class TransactionAdmin(admin.ModelAdmin):
 
 	# Detail Page Settings
 	fieldsets = (
-		('Transaction Info', {'fields': ('user', 'amount', 'category', 'payment_method', 'location',)}),
+		('Transaction Info', {'fields': ('user', 'amount', 'category', 'payment_method', 'location', 'sale_date')}),
 		('Timestamp', {'fields': ('created',)}),
 	)
 	readonly_fields = ('created',)

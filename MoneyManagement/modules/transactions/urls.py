@@ -2,16 +2,14 @@ from django.urls import path
 
 from .views import TransactionViewSet
 
-transaction_list = TransactionViewSet.as_view({
-	'get': 'list',
+
+
+transaction_generator = TransactionViewSet.as_view({
+	'post': 'generator',
 })
 
-transaction_detail = TransactionViewSet.as_view({
-	'get': 'detail',
-})
 
 
 urlpatterns = [
-	path('list/<list_type>/', transaction_list, name='transaction_list'),
-	path('<id>/', transaction_detail, name='transaction_detail'),
+	path('generate/<user_type>/', transaction_generator, name='transaction_generator'),
 ]

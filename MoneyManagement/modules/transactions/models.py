@@ -8,21 +8,16 @@ class Transaction(models.Model):
 	Transaction Model
 	Contains transaction info.
 	"""
-	PAYMENT_METHOD_CHOICES = (
-		(1, 'Card Swipe'),
-		(2, 'Chip'),
-		(3, 'Online'),
-		(3, 'Apple Pay'),
-	)
 
 	# Relations
 	user = models.ForeignKey('users.User', related_name='transactions', on_delete=models.PROTECT)
+	location = models.ForeignKey('Location', on_delete=models.CASCADE)
 
 	# Data
 	amount = models.FloatField()
 	category = models.CharField(max_length=30)
-	payment_method = models.IntegerField(choices=PAYMENT_METHOD_CHOICES)
-	location = models.ForeignKey('Location', on_delete=models.CASCADE)
+	payment_method = models.CharField(max_length=30)
+	sale_date = models.DateTimeField()
 
 	# Timestamp
 	created = models.DateTimeField(auto_now_add=True)
@@ -38,7 +33,7 @@ class Location(models.Model):
 	"""
 	vendor_name = models.CharField(max_length=30)
 	address_1 = models.CharField(max_length=100)
-	address_2 = models.CharField(max_length=100)
+	address_2 = models.CharField(max_length=100, null=True)
 	city = models.CharField(max_length=100)
 	state = models.CharField(max_length=100)
 	zipcode = models.CharField(max_length=100)

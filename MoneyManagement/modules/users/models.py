@@ -48,11 +48,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 	"""
 
 	# User Login
-	email = models.EmailField(unique=True, blank=True,
-	                          error_messages={'unique': "A user with that email already exists."})
+	email = models.EmailField(unique=True, blank=True, error_messages={'unique': "A user with that email already exists."})
 
 	first_name = models.CharField(max_length=30)
 	last_name = models.CharField(max_length=30)
+	user_id = models.IntegerField(null=True)
+	user_type = models.CharField(max_length=30)
 
 	# Permissions
 	is_staff = models.BooleanField(
@@ -61,8 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	)
 	is_active = models.BooleanField(
 		default=True,
-		help_text='Designates whether this user should be treated as active. '
-		          'Unselect this instead of deleting accounts.'
+		help_text='Designates whether this user should be treated as active. ''Unselect this instead of deleting accounts.'
 	)
 
 	# TimeStamp

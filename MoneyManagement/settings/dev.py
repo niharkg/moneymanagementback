@@ -17,6 +17,9 @@ DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS': False, }
 # Set secret to 42
 SECRET_KEY = '42'
 
+# Max number of GET/POST
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000
+
 # Set allowed hosts to all
 ALLOWED_HOSTS = '*'
 
