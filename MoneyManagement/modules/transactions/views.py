@@ -1,13 +1,14 @@
 from datetime import datetime
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.parsers import FormParser, JSONParser
 
 from .models import Transaction
 from .models import User
 from .models import Location
+from .serializers import TransactionSerializer
 from MoneyManagement.utils import generator
 
 
@@ -17,6 +18,14 @@ class TransactionViewSet(viewsets.ViewSet):
 	"""
     parser_classes = (FormParser, JSONParser)
     permission_classes = (AllowAny,)
+
+
+    def retrieve_user_transactions(self, request, user_id):
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user)
+            serializer = TransactionSerializer(transactions, many=True)
+            return Response(serializer.data)
 
 
     def generator(self, request, user_type):

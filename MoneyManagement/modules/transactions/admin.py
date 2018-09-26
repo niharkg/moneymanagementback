@@ -6,7 +6,7 @@ from .models import Transaction, Location
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
 	# List display Settings
-	list_display = ('id', 'user', 'amount', 'category', 'created')
+	list_display = ('id', 'user', 'amount', 'category', 'sale_date', 'created')
 	search_fields = ('category',)
 	ordering = ('created',)
 
