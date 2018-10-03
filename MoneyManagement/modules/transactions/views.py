@@ -70,6 +70,17 @@ class TransactionViewSet(viewsets.ViewSet):
             return Response(monthly_spending)
 
 
+    def retrieve_transactions_after_date(self, request, user_id, start_date):
+        print(user_id)
+        print(start_date)
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user, sale_date__gte=start_date)
+            serializer = TransactionSerializer(transactions, many=True)
+            return Response(serializer.data)
+
+
+
     def generator(self, request, user_type):
         """
         :param user_type: employed, teenager, or college

@@ -20,10 +20,14 @@ all_months_category_retriever = TransactionViewSet.as_view({
 	'get': 'retrieve_all_user_monthly_category_spendings',
 })
 
+transaction_start_date_retriever = TransactionViewSet.as_view({
+	'get': 'retrieve_transactions_after_date',
+})
 
 urlpatterns = [
 	path('generate/<user_type>/', transaction_generator, name='transaction_generator'),
 	path('get/<user_id>/', transaction_retriever, name='transaction_retriever'),
 	path('get/categories/<user_id>/<month>/<year>/', monthly_category_retriever, name='monthly_category_retriever'),
-	path('get/categories/<user_id>/<category>/', all_months_category_retriever, name='all_months_category_retriever')
+	path('get/categories/<user_id>/<category>/', all_months_category_retriever, name='all_months_category_retriever'),
+	path('get/<user_id>/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
 ]
