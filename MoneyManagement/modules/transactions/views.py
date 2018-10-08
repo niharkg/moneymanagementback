@@ -42,10 +42,17 @@ class TransactionViewSet(viewsets.ViewSet):
     def retrieve_user_transactions(self, request, user_id):
         if request.method == 'GET':
             user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user)
+            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")
             serializer = TransactionSerializer(transactions, many=True)
             return Response(serializer.data)
 
+    def retrieve_limited_user_transactions(self, request, user_id, amount):
+        if request.method == 'GET':
+            print('here')
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")[:int(amount)]
+            serializer = TransactionSerializer(transactions, many=True)
+            return Response(serializer.data)
 
     def retrieve_user_monthly_category_spendings(self, request, user_id, month, year):
         if request.method == 'GET':

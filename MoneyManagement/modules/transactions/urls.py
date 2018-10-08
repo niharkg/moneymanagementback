@@ -24,6 +24,10 @@ transaction_start_date_retriever = TransactionViewSet.as_view({
 	'get': 'retrieve_transactions_after_date',
 })
 
+transaction_retriever_limited = TransactionViewSet.as_view({
+	'get': 'retrieve_limited_user_transactions',
+})
+
 urlpatterns = [
 	# Generate a new user
 	path('generate/<user_type>/', transaction_generator, name='transaction_generator'),
@@ -35,4 +39,6 @@ urlpatterns = [
 	path('get/categories/<user_id>/<category>/', all_months_category_retriever, name='all_months_category_retriever'),
 	# Get all transactions after a specific start date
 	path('get/<user_id>/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
+	# Get a limited amount of user transactions
+	path('get/<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
 ]
