@@ -1,9 +1,11 @@
-from datetime import datetime
+import pytz
+from datetime import datetime, timezone
 
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import FormParser, JSONParser
+from django.http import JsonResponse
 
 from .models import Transaction
 from .models import User
@@ -20,12 +22,70 @@ class TransactionViewSet(viewsets.ViewSet):
     permission_classes = (AllowAny,)
 
 
+    def breakdown_monthly_spending(self, transactions):
+        spending_dict = {}
+        for transaction in transactions:
+            month = transaction["sale_date"][0:4]
+            year = transaction["sale_date"][5:7]
+            category = transaction["category"]
+            month_string = month + "/" + year
+            if month_string not in spending_dict:
+                spending_dict[month_string] = {}
+            if category in spending_dict[month_string]:
+                spending_dict[month_string][category] += transaction["amount"]
+            else:
+                spending_dict[month_string][category] = transaction["amount"]
+        return spending_dict
+
+
+
     def retrieve_user_transactions(self, request, user_id):
         if request.method == 'GET':
             user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user)
+            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")
             serializer = TransactionSerializer(transactions, many=True)
             return Response(serializer.data)
+
+    def retrieve_limited_user_transactions(self, request, user_id, amount):
+        if request.method == 'GET':
+            print('here')
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")[:int(amount)]
+            serializer = TransactionSerializer(transactions, many=True)
+            return Response(serializer.data)
+
+    def retrieve_user_monthly_category_spendings(self, request, user_id, month, year):
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user, sale_date__month=month, sale_date__year=year)
+            serializer = TransactionSerializer(transactions, many=True)
+            month_spending = self.breakdown_monthly_spending(serializer.data)
+            return Response(month_spending)
+
+
+    def retrieve_all_user_monthly_category_spendings(self, request, user_id, category):
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            # All categories of spending
+            if category.upper() == "ALL":
+                transactions = Transaction.objects.filter(user=user)
+            # Specific category
+            else:
+                transactions = Transaction.objects.filter(user=user, category=category)
+            serializer = TransactionSerializer(transactions, many=True)
+            monthly_spending = self.breakdown_monthly_spending(serializer.data)
+            return Response(monthly_spending)
+
+
+    def retrieve_transactions_after_date(self, request, user_id, start_date):
+        print(user_id)
+        print(start_date)
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            transactions = Transaction.objects.filter(user=user, sale_date__gte=start_date)
+            serializer = TransactionSerializer(transactions, many=True)
+            return Response(serializer.data)
+
 
 
     def generator(self, request, user_type):
@@ -65,6 +125,7 @@ class TransactionViewSet(viewsets.ViewSet):
                     day = transaction[3]
                     time = transaction[4]
                     date_object = datetime.strptime(day + " " + time, '%m/%d/%y %H:%M')
+                    date_object = pytz.utc.localize(date_object)
                     Transaction.objects.create(
                         amount=transaction[6],
                         category=transaction[7],
@@ -76,4 +137,12 @@ class TransactionViewSet(viewsets.ViewSet):
             except Exception as e:
                 print(e)
                 return Response("Error creating transactions")
-            return Response("Success")
+
+            return JsonResponse({"Success":
+                                     {'last_name':user_data[0][1],
+                                      'first_name':user_data[0][2],
+                                      'email':mock_email,
+                                      'password':user_data[0][2],
+                                      'user_type':user_data[0][10],
+                                      'user_id':user_data[0][0]}
+                                 })
