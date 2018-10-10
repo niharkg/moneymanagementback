@@ -9,7 +9,7 @@ class FullUserSerializer(serializers.ModelSerializer):
 	"""
 	class Meta:
 		model = User
-		fields = ('id', 'email', 'first_name', 'last_name', 'user_type','is_active', 'created', 'updated',)
+		fields = ('id', 'email', 'first_name', 'last_name', 'user_type','is_active', 'user_id', 'created', 'updated',)
 		read_only_fields = ('created', 'updated',)
 
 
