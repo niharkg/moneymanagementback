@@ -22,6 +22,14 @@ transaction_start_date_retriever = TransactionViewSet.as_view({
 	'get': 'retrieve_transactions_after_date',
 })
 
+transaction_retriever_limited = TransactionViewSet.as_view({
+	'get': 'retrieve_limited_user_transactions',
+})
+
+ml_model_generator = TransactionViewSet.as_view({
+	'get': 'generate_machine_learning_model',
+})
+
 urlpatterns = [
 	# For data generation
 	# Generate a new user
@@ -41,4 +49,10 @@ urlpatterns = [
 
 	# Get all transactions after a specific start date
 	path('after/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
+	# path('get/<user_id>/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
+	
+	# Get a limited amount of user transactions
+	path('get/<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
+	# Generate machine learning model for user
+	path('get/ml/<user_id>/<category>/', ml_model_generator, name='ml_model_generator'),
 ]
