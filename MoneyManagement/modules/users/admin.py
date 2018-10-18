@@ -28,11 +28,11 @@ class UserAdmin(BaseUserAdmin):
 
 	# Detail Page Settings
 	fieldsets = (
-		('User Info', {'fields': ('email', 'password', 'first_name', 'last_name', 'user_id')}),
+		('User Info', {'fields': ('id', 'email', 'password', 'first_name', 'last_name', 'user_id')}),
 		('Permissions', {'fields': ('is_active', 'is_staff',)}),
 		('Timestamp', {'fields': ('created', 'updated',)}),
 	)
-	readonly_fields = ('created', 'updated',
+	readonly_fields = ('created', 'updated', 'id',
 	                   'is_active', 'is_staff')
 
 
