@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import FormParser, JSONParser
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 
 from .models import Transaction
 from .models import User
@@ -18,13 +19,12 @@ class TransactionViewSet(viewsets.ViewSet):
     """
 	The viewset for company module
 	"""
-    parser_classes = (FormParser, JSONParser)
-    permission_classes = (AllowAny,)
+	parser_classes = (FormParser, JSONParser)
+	permission_classes = (AllowAny,)
 
-
-    def breakdown_monthly_spending(self, transactions):
-        spending_dict = {}
-        for transaction in transactions:
+	def breakdown_monthly_spending(self, transactions):
+		spending_dict = {}
+		for transaction in transactions:
             month = transaction["sale_date"][0:4]
             year = transaction["sale_date"][5:7]
             category = transaction["category"]
@@ -34,63 +34,96 @@ class TransactionViewSet(viewsets.ViewSet):
             if category in spending_dict[month_string]:
                 spending_dict[month_string][category] += transaction["amount"]
             else:
-                spending_dict[month_string][category] = transaction["amount"]
-        return spending_dict
+				spending_dict[month_string][category] = transaction["amount"]
+		return spending_dict
 
+	def list_transactions(self, request, page_id=None):
+		if request.method == 'GET':
+			if not page_id:
+				transactions = Transaction.objects.filter(user=request.user)
+				serializer = TransactionSerializer(transactions, many=True)
+				return Response(serializer.data)
 
+			else:
+				aggregations = Transaction.objects.filter(user=request.user)
 
-    def retrieve_user_transactions(self, request, user_id):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")
-            serializer = TransactionSerializer(transactions, many=True)
-            return Response(serializer.data)
+				if request.query_params.get('date'):
+					if request.query_params.get('date') == 'des':
+						aggregations = aggregations.order_by('-sale_date')
+					elif request.query_params.get('date') == 'asc':
+						aggregations = aggregations.order_by('sale_date')
 
-    def retrieve_limited_user_transactions(self, request, user_id, amount):
-        if request.method == 'GET':
-            print('here')
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")[:int(amount)]
-            serializer = TransactionSerializer(transactions, many=True)
-            return Response(serializer.data)
+				if request.query_params.get('amount'):
+					if request.query_params.get('amount') == 'des':
+						aggregations = aggregations.order_by('-amount')
+					elif request.query_params.get('amount') == 'asc':
+						aggregations = aggregations.order_by('amount')
 
-    def retrieve_user_monthly_category_spendings(self, request, user_id, month, year):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user, sale_date__month=month, sale_date__year=year)
-            serializer = TransactionSerializer(transactions, many=True)
-            month_spending = self.breakdown_monthly_spending(serializer.data)
-            return Response(month_spending)
+				if request.query_params.get('category'):
+					if request.query_params.get('category') == 'des':
+						aggregations = aggregations.order_by('-category')
+					elif request.query_params.get('category') == 'asc':
+						aggregations = aggregations.order_by('category')
+					else:
+						aggregations = aggregations.filter(category=request.query_params.get('category'))
 
+				if request.query_params.get('method'):
+					if request.query_params.get('method') == 'des':
+						aggregations = aggregations.order_by('-method')
+					elif request.query_params.get('method') == 'asc':
+						aggregations = aggregations.order_by('method')
+					else:
+						aggregations = aggregations.filter(payment_method=request.query_params.get('method'))
 
-    def retrieve_all_user_monthly_category_spendings(self, request, user_id, category):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            # All categories of spending
-            if category.upper() == "ALL":
-                transactions = Transaction.objects.filter(user=user)
-            # Specific category
-            else:
-                transactions = Transaction.objects.filter(user=user, category=category)
-            serializer = TransactionSerializer(transactions, many=True)
-            monthly_spending = self.breakdown_monthly_spending(serializer.data)
-            return Response(monthly_spending)
+				if request.query_params.get('vendor'):
+					if request.query_params.get('vendor') == 'des':
+						aggregations = aggregations.order_by('-location__vendor_name')
+					elif request.query_params.get('vendor') == 'asc':
+						aggregations = aggregations.order_by('location__vendor_name')
+					else:
+						aggregations = aggregations.filter(location__vendor_name=request.query_params.get('vendor'))
 
+				if request.query_params.get('location'):
+					if request.query_params.get('location') == 'des':
+						aggregations = aggregations.order_by('-location__city')
+					elif request.query_params.get('location') == 'asc':
+						aggregations = aggregations.order_by('location__city')
+					else:
+						aggregations = aggregations.filter(location__city=request.query_params.get('location'))
 
-    def retrieve_transactions_after_date(self, request, user_id, start_date):
-        print(user_id)
-        print(start_date)
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user, sale_date__gte=start_date)
-            serializer = TransactionSerializer(transactions, many=True)
-            return Response(serializer.data)
+				paginator = Paginator(aggregations, 20)
+				transactions = paginator.get_page(page_id)
+				serializer = TransactionSerializer(transactions, many=True)
+				return Response(serializer.data)
 
+	def retrieve_user_monthly_category_spendings(self, request, month, year):
+		if request.method == 'GET':
+			transactions = Transaction.objects.filter(user=request.user, sale_date__month=month, sale_date__year=year)
+			serializer = TransactionSerializer(transactions, many=True)
+			month_spending = self.breakdown_monthly_spending(serializer.data)
+			return Response(month_spending)
 
+	def retrieve_all_user_monthly_category_spendings(self, request, category):
+		if request.method == 'GET':
+			# All categories of spending
+			if category.upper() == "ALL":
+				transactions = Transaction.objects.filter(user=request.user)
+			# Specific category
+			else:
+				transactions = Transaction.objects.filter(user=request.user, category=category)
+			serializer = TransactionSerializer(transactions, many=True)
+			monthly_spending = self.breakdown_monthly_spending(serializer.data)
+			return Response(monthly_spending)
 
-    def generator(self, request, user_type):
-        """
-        :param user_type: employed, teenager, or college
+	def retrieve_transactions_after_date(self, request, start_date):
+		if request.method == 'GET':
+			transactions = Transaction.objects.filter(user=request.user, sale_date__gte=start_date)
+			serializer = TransactionSerializer(transactions, many=True)
+			return Response(serializer.data)
+
+	def generator(self, request, user_type):
+		"""
+		:param user_type: employed, teenager, or college
 		user_data generated array:
 			0:  user ID
 			1:  user last name
