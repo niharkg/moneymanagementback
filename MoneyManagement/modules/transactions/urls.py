@@ -30,6 +30,16 @@ ml_model_generator = TransactionViewSet.as_view({
 	'get': 'generate_machine_learning_model',
 })
 
+unique_categories = TransactionViewSet.as_view({
+	'get': 'get_user_categories',
+})
+
+monthly_spendings = TransactionViewSet.as_view({
+	'get': 'get_last_year_total_spending',
+})
+
+
+
 urlpatterns = [
 	# For data generation
 	# Generate a new user
@@ -55,4 +65,8 @@ urlpatterns = [
 	path('get/<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
 	# Generate machine learning model for user
 	path('get/ml/<user_id>/<category>/', ml_model_generator, name='ml_model_generator'),
+	# Get all spending categories for a user
+	path('unique_categories/<user_id>/', unique_categories, name='unique_categories'),
+	# Get total spendings for the last year
+	path('monthly_spendings/<user_id>/', monthly_spendings, name='monthly_spendings'),
 ]

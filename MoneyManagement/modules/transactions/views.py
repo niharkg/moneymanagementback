@@ -1,5 +1,7 @@
 import pytz
-from datetime import datetime, timezone
+import calendar
+import datetime
+from datetime import timedelta
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -7,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.parsers import FormParser, JSONParser
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.db.models import Sum
 
 from .models import Transaction
 from .models import User
@@ -148,16 +151,46 @@ class TransactionViewSet(viewsets.ViewSet):
 
 
 
+
     def generate_machine_learning_model(self, request, user_id, category):
         if request.method == 'GET':
+            # Fix issue with Gas/Automotive URL
+            category = category.replace("_", "/")
             monthly_spending = self.get_monthly_category_spending(user_id, category)
             months = []
             spendings = []
             for transaction in monthly_spending:
                 months.append(transaction[5:7])
                 spendings.append(monthly_spending[transaction][category])
+            print(category, " training beginning...")
             data = ml_model.train_category_spending_model(months, spendings)
+            print(category, " model complete!")
             return Response(data)
+
+    def get_user_categories(self, request, user_id):
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            categories = Transaction.objects.filter(user=user).values('category').distinct()
+            retval = []
+            for category in categories:
+                retval.append(category["category"])
+            return Response(retval)
+
+
+    def get_last_year_total_spending(self, request, user_id):
+        if request.method == 'GET':
+            months = []
+            spendings = []
+            user = User.objects.get(user_id=user_id)
+            dt = datetime.datetime.now()
+            for i in range(12):
+                transactions = Transaction.objects.filter(user=user, sale_date__month=dt.month, sale_date__year=dt.year)
+                months = [(str(dt.month) + "/" + str(dt.year))] + months
+                spendings = [(transactions.aggregate(Sum('amount'))['amount__sum'])] + spendings
+                dt = dt.replace(day=1)
+                dt = dt - timedelta(days=1)
+            return Response([months, spendings])
+
 
 
     # Helper function
