@@ -29,4 +29,4 @@ def train_category_spending_model(months, spendings):
             pred = (tf.multiply(w_value[0], float(months[index])) + w_value[1]).eval()
             pred = round(pred, 2)
             predictions.append(pred)
-        return[months, spendings, predictions]
+        return[w_value[0], w_value[1]]

@@ -37,6 +37,9 @@ unique_categories = TransactionViewSet.as_view({
 monthly_spendings = TransactionViewSet.as_view({
 	'get': 'get_last_year_total_spending',
 })
+all_models = TransactionViewSet.as_view({
+	'get': 'get_all_models_user',
+})
 
 
 
@@ -69,4 +72,6 @@ urlpatterns = [
 	path('unique_categories/<user_id>/', unique_categories, name='unique_categories'),
 	# Get total spendings for the last year
 	path('monthly_spendings/<user_id>/', monthly_spendings, name='monthly_spendings'),
+	# Get all spending models for a user
+	path('ml_model/<user_id>/', all_models, name='all_models'),
 ]

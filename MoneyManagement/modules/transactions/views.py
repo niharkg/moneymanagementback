@@ -11,10 +11,10 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Sum
 
-from .models import Transaction
+from .models import Transaction, ML_Parameters
 from .models import User
 from .models import Location
-from .serializers import TransactionSerializer
+from .serializers import TransactionSerializer, ML_ParametersSerializer
 from MoneyManagement.utils import generator
 from MoneyManagement.utils import ml_model
 
@@ -156,6 +156,7 @@ class TransactionViewSet(viewsets.ViewSet):
         if request.method == 'GET':
             # Fix issue with Gas/Automotive URL
             category = category.replace("_", "/")
+            user = User.objects.get(user_id=user_id)
             monthly_spending = self.get_monthly_category_spending(user_id, category)
             months = []
             spendings = []
@@ -164,7 +165,16 @@ class TransactionViewSet(viewsets.ViewSet):
                 spendings.append(monthly_spending[transaction][category])
             print(category, " training beginning...")
             data = ml_model.train_category_spending_model(months, spendings)
+            slope = data[0]
+            intercept = data[1]
+            ML_Parameters.objects.create(
+                user=user,
+                category=category,
+                slope=slope,
+                intercept=intercept,
+            )
             print(category, " model complete!")
+
             return Response(data)
 
     def get_user_categories(self, request, user_id):
@@ -190,6 +200,14 @@ class TransactionViewSet(viewsets.ViewSet):
                 dt = dt.replace(day=1)
                 dt = dt - timedelta(days=1)
             return Response([months, spendings])
+
+
+    def get_all_models_user(self, request, user_id):
+        if request.method == 'GET':
+            user = User.objects.get(user_id=user_id)
+            models = ML_Parameters.objects.filter(user=user)
+            serializer = ML_ParametersSerializer(models, many=True)
+            return Response(serializer.data)
 
 
 
