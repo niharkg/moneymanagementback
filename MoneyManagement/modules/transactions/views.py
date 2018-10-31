@@ -91,6 +91,7 @@ class TransactionViewSet(viewsets.ViewSet):
 			transactions = Transaction.objects.filter(user=request.user, sale_date__month=month, sale_date__year=year)
 			serializer = TransactionSerializer(transactions, many=True)
 			month_spending = self.breakdown_monthly_spending(serializer.data)
+			# print(response)
 			return Response(month_spending)
 
 	def retrieve_all_user_monthly_category_spendings(self, request, category):
@@ -110,131 +111,120 @@ class TransactionViewSet(viewsets.ViewSet):
 			transactions = Transaction.objects.filter(user=request.user, sale_date__gte=start_date)
 			serializer = TransactionSerializer(transactions, many=True)
 			return Response(serializer.data)
-
-    def breakdown_monthly_spending(self, transactions):
-        spending_dict = {}
-        for transaction in transactions:
-            month = transaction["sale_date"][0:4]
-            year = transaction["sale_date"][5:7]
-            category = transaction["category"]
-            month_string = month + "/" + year
-            if month_string not in spending_dict:
-                spending_dict[month_string] = {}
-            if category in spending_dict[month_string]:
-                spending_dict[month_string][category] += transaction["amount"]
-            else:
-                spending_dict[month_string][category] = transaction["amount"]
-        return spending_dict
+			
+	def breakdown_monthly_spending(self, transactions):
+		spending_dict = {}
+		for transaction in transactions:
+			month = transaction["sale_date"][0:4]
+			year = transaction["sale_date"][5:7]
+			category = transaction["category"]
+			month_string = month + "/" + year
+			if month_string not in spending_dict:
+				spending_dict[month_string] = {}
+			if category in spending_dict[month_string]:
+				spending_dict[month_string][category] += transaction["amount"]
+			else:
+				spending_dict[month_string][category] = transaction["amount"]
+		return spending_dict
 # -------------------------------------------------------------------
-    def retrieve_user_transactions(self, request, user_id):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")
-            serializer = TransactionSerializer(transactions, many=True)
-            return Response(serializer.data)
+	def retrieve_user_transactions(self, request, user_id):
+		if request.method == 'GET':
+			user = User.objects.get(user_id=user_id)
+			transactions = Transaction.objects.filter(user=user).order_by("-sale_date")
+			serializer = TransactionSerializer(transactions, many=True)
+			return Response(serializer.data)
 
-    def retrieve_limited_user_transactions(self, request, user_id, amount):
-        if request.method == 'GET':
-            print('here')
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user).order_by("-sale_date")[:int(amount)]
-            serializer = TransactionSerializer(transactions, many=True)
-            return Response(serializer.data)
+	def retrieve_limited_user_transactions(self, request, user_id, amount):
+		if request.method == 'GET':
+			print('here')
+			user = User.objects.get(user_id=user_id)
+			transactions = Transaction.objects.filter(user=user).order_by("-sale_date")[:int(amount)]
+			serializer = TransactionSerializer(transactions, many=True)
+			return Response(serializer.data)
 
-    def retrieve_user_monthly_category_spendings(self, request, user_id, month, year):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            transactions = Transaction.objects.filter(user=user, sale_date__month=month, sale_date__year=year)
-            serializer = TransactionSerializer(transactions, many=True)
-            month_spending = self.breakdown_monthly_spending(serializer.data)
-            return Response(month_spending)
+	def generate_machine_learning_model(self, request, user_id, category):
+		if request.method == 'GET':
+			# Fix issue with Gas/Automotive URL
+			category = category.replace("_", "/")
+			user = User.objects.get(user_id=user_id)
+			monthly_spending = self.get_monthly_category_spending(user_id, category)
+			months = []
+			spendings = []
+			for transaction in monthly_spending:
+				months.append(transaction[5:7])
+				spendings.append(monthly_spending[transaction][category])
+			print(category, " training beginning...")
+			data = ml_model.train_category_spending_model(months, spendings)
+			slope = data[0]
+			intercept = data[1]
+			paras = ML_Parameters.objects.filter(user=user, category=category)
+			if paras:
+				paras = paras[0]
+				paras.slope = slope
+				paras.intercept = intercept
+				paras.save()
+			else:
+				ML_Parameters.objects.create(
+					user=user,
+					category=category,
+					slope=slope,
+					intercept=intercept,
+				)
+			print(category, " model complete!")
 
+			return Response(data)
 
-
-
-    def generate_machine_learning_model(self, request, user_id, category):
-        if request.method == 'GET':
-            # Fix issue with Gas/Automotive URL
-            category = category.replace("_", "/")
-            user = User.objects.get(user_id=user_id)
-            monthly_spending = self.get_monthly_category_spending(user_id, category)
-            months = []
-            spendings = []
-            for transaction in monthly_spending:
-                months.append(transaction[5:7])
-                spendings.append(monthly_spending[transaction][category])
-            print(category, " training beginning...")
-            data = ml_model.train_category_spending_model(months, spendings)
-            slope = data[0]
-            intercept = data[1]
-            paras = ML_Parameters.objects.filter(user=user, category=category)
-            if paras:
-                paras = paras[0]
-                paras.slope = slope
-                paras.intercept = intercept
-                paras.save()
-            else:
-                ML_Parameters.objects.create(
-                    user=user,
-                    category=category,
-                    slope=slope,
-                    intercept=intercept,
-                )
-            print(category, " model complete!")
-
-            return Response(data)
-
-    def get_user_categories(self, request, user_id):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            categories = Transaction.objects.filter(user=user).values('category').distinct()
-            retval = []
-            for category in categories:
-                retval.append(category["category"])
-            return Response(retval)
+	def get_user_categories(self, request, user_id):
+		if request.method == 'GET':
+			user = User.objects.get(user_id=user_id)
+			categories = Transaction.objects.filter(user=user).values('category').distinct()
+			retval = set()
+			for category in categories:
+				retval.add(category["category"])
+			return Response(list(retval))
 
 
-    def get_last_year_total_spending(self, request, user_id):
-        if request.method == 'GET':
-            months = []
-            spendings = []
-            user = User.objects.get(user_id=user_id)
-            dt = datetime.datetime.now()
-            for i in range(12):
-                transactions = Transaction.objects.filter(user=user, sale_date__month=dt.month, sale_date__year=dt.year)
-                months = [(str(dt.month) + "/" + str(dt.year))] + months
-                spendings = [(transactions.aggregate(Sum('amount'))['amount__sum'])] + spendings
-                dt = dt.replace(day=1)
-                dt = dt - timedelta(days=1)
-            return Response([months, spendings])
+	def get_last_year_total_spending(self, request, user_id):
+		if request.method == 'GET':
+			months = []
+			spendings = []
+			user = User.objects.get(user_id=user_id)
+			dt = datetime.datetime.now()
+			for i in range(12):
+				transactions = Transaction.objects.filter(user=user, sale_date__month=dt.month, sale_date__year=dt.year)
+				months = [(str(dt.month) + "/" + str(dt.year))] + months
+				spendings = [(transactions.aggregate(Sum('amount'))['amount__sum'])] + spendings
+				dt = dt.replace(day=1)
+				dt = dt - timedelta(days=1)
+			return Response([months, spendings])
 
 
-    def get_all_models_user(self, request, user_id):
-        if request.method == 'GET':
-            user = User.objects.get(user_id=user_id)
-            models = ML_Parameters.objects.filter(user=user)
-            serializer = ML_ParametersSerializer(models, many=True)
-            return Response(serializer.data)
+	def get_all_models_user(self, request, user_id):
+		if request.method == 'GET':
+			user = User.objects.get(user_id=user_id)
+			models = ML_Parameters.objects.filter(user=user)
+			serializer = ML_ParametersSerializer(models, many=True)
+			return Response(serializer.data)
 
 
 
-    # Helper function
-    def get_monthly_category_spending(self, user_id, category):
-        user = User.objects.get(user_id=user_id)
-        # All categories of spending
-        if category.upper() == "ALL":
-            transactions = Transaction.objects.filter(user=user)
-        # Specific category
-        else:
-            transactions = Transaction.objects.filter(user=user, category=category)
-        serializer = TransactionSerializer(transactions, many=True)
-        monthly_spending = self.breakdown_monthly_spending(serializer.data)
-        return monthly_spending
+	# Helper function
+	def get_monthly_category_spending(self, user_id, category):
+		user = User.objects.get(user_id=user_id)
+		# All categories of spending
+		if category.upper() == "ALL":
+			transactions = Transaction.objects.filter(user=user)
+		# Specific category
+		else:
+			transactions = Transaction.objects.filter(user=user, category=category)
+		serializer = TransactionSerializer(transactions, many=True)
+		monthly_spending = self.breakdown_monthly_spending(serializer.data)
+		return monthly_spending
 
 
-    def generator(self, request, user_type):
-        """
-        :param user_type: employed, teenager, or college
+	def generator(self, request, user_type):
+		"""
+		:param user_type: employed, teenager, or college
 		user_data generated array:
 			0:  user ID
 			1:  user last name
@@ -283,10 +273,10 @@ class TransactionViewSet(viewsets.ViewSet):
 				return Response("Error creating transactions")
 
 			return JsonResponse({"Success":
-				                     {'last_name' : user_data[0][1],
-				                      'first_name': user_data[0][2],
-				                      'email'     : mock_email,
-				                      'password'  : user_data[0][2],
-				                      'user_type' : user_data[0][10],
-				                      'user_id'   : user_data[0][0]}
-			                     })
+									 {'last_name' : user_data[0][1],
+									  'first_name': user_data[0][2],
+									  'email'	 : mock_email,
+									  'password'  : user_data[0][2],
+									  'user_type' : user_data[0][10],
+									  'user_id'   : user_data[0][0]}
+								 })

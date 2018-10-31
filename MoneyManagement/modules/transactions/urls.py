@@ -65,7 +65,7 @@ urlpatterns = [
 	# path('get/<user_id>/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
 	
 	# Get a limited amount of user transactions
-	path('get/<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
+	path('<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
 	# Generate machine learning model for user
 	path('get/ml/<user_id>/<category>/', ml_model_generator, name='ml_model_generator'),
 	# Get all spending categories for a user
