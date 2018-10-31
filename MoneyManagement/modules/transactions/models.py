@@ -43,3 +43,10 @@ class Location(models.Model):
 
 	def __str__(self):
 		return self.vendor_name
+
+class ML_Parameters(models.Model):
+	# Relations
+	user = models.ForeignKey('users.User', related_name='ml_parameters', on_delete=models.PROTECT)
+	category = models.CharField(max_length=30)
+	slope = models.FloatField()
+	intercept = models.FloatField()

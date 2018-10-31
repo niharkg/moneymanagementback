@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Transaction, Location
+from .models import Transaction, Location, ML_Parameters
 
 
 @admin.register(Transaction)
@@ -29,3 +29,10 @@ class LocationAdmin(admin.ModelAdmin):
 		('Location Info', {'fields': ('vendor_name', 'address_1', 'address_2', 'city', 'state', 'zipcode')}),
 	)
 
+
+@admin.register(ML_Parameters)
+class ML_ModelAdmin(admin.ModelAdmin):
+	list_display = ('user', 'category', 'slope', 'intercept',)
+	fieldsets = (
+		('ML Info', {'fields': ('user', 'category', 'slope', 'intercept')}),
+	)
