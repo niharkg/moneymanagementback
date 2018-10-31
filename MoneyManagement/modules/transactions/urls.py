@@ -2,14 +2,12 @@ from django.urls import path
 
 from .views import TransactionViewSet
 
-
-
 transaction_generator = TransactionViewSet.as_view({
 	'post': 'generator',
 })
 
-transaction_retriever = TransactionViewSet.as_view({
-	'get': 'retrieve_user_transactions',
+list_transactions = TransactionViewSet.as_view({
+	'get': 'list_transactions',
 })
 
 monthly_category_retriever = TransactionViewSet.as_view({
@@ -24,21 +22,23 @@ transaction_start_date_retriever = TransactionViewSet.as_view({
 	'get': 'retrieve_transactions_after_date',
 })
 
-transaction_retriever_limited = TransactionViewSet.as_view({
-	'get': 'retrieve_limited_user_transactions',
-})
-
 urlpatterns = [
+	# For data generation
 	# Generate a new user
 	path('generate/<user_type>/', transaction_generator, name='transaction_generator'),
+
+
+	# For information retrial
 	# Get all recent transactions
-	path('get/<user_id>/', transaction_retriever, name='transaction_retriever'),
+	path('all/', list_transactions, name='list_all_transactions'),
+	# Get all recent transactions
+	path('page/<page_id>/', list_transactions, name='list_transactions_by_page'),
+
 	# Get category spending breakdown for a particular month and year
-	path('get/categories/<user_id>/<month>/<year>/', monthly_category_retriever, name='monthly_category_retriever'),
+	path('categories/<int:month>/<int:year>/', monthly_category_retriever, name='monthly_category_retriever'),
 	# Get a specific or all category breakdown for all active user months
-	path('get/categories/<user_id>/<category>/', all_months_category_retriever, name='all_months_category_retriever'),
+	path('categories/<category>/', all_months_category_retriever, name='all_months_category_retriever'),
+
 	# Get all transactions after a specific start date
-	path('get/<user_id>/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
-	# Get a limited amount of user transactions
-	path('get/<user_id>/amount/<amount>/', transaction_retriever_limited, name='transaction_retriever_limited'),
+	path('after/<start_date>/', transaction_start_date_retriever, name='transaction_start_date_retriever'),
 ]

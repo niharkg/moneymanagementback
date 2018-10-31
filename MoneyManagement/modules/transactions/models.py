@@ -25,6 +25,9 @@ class Transaction(models.Model):
 	def __str__(self):
 		return str(self.created)
 
+	class Meta:
+		ordering = ['-sale_date']
+
 
 class Location(models.Model):
 	"""
