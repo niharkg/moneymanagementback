@@ -1,6 +1,6 @@
 import pytz
 import calendar
-import datetime
+from datetime import datetime
 from datetime import timedelta
 
 from rest_framework import viewsets
@@ -248,7 +248,7 @@ class TransactionViewSet(viewsets.ViewSet):
 					email=mock_email,
 					user_type=user_data[0][10],
 				)
-				user.set_password(user_data[0][2])
+				#user.set_password(user_data[0][2])
 				user.save()
 			except Exception as e:
 				print(e)
