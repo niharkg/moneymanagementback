@@ -167,12 +167,19 @@ class TransactionViewSet(viewsets.ViewSet):
             data = ml_model.train_category_spending_model(months, spendings)
             slope = data[0]
             intercept = data[1]
-            ML_Parameters.objects.create(
-                user=user,
-                category=category,
-                slope=slope,
-                intercept=intercept,
-            )
+            paras = ML_Parameters.objects.filter(user=user, category=category)
+            if paras:
+                paras = paras[0]
+                paras.slope = slope
+                paras.intercept = intercept
+                paras.save()
+            else:
+                ML_Parameters.objects.create(
+                    user=user,
+                    category=category,
+                    slope=slope,
+                    intercept=intercept,
+                )
             print(category, " model complete!")
 
             return Response(data)
