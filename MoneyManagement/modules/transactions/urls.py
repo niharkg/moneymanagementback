@@ -40,7 +40,9 @@ monthly_spendings = TransactionViewSet.as_view({
 all_models = TransactionViewSet.as_view({
 	'get': 'get_all_models_user',
 })
-
+location_maker = TransactionViewSet.as_view({
+	'post': 'location_generator'
+})
 
 
 urlpatterns = [
@@ -74,4 +76,5 @@ urlpatterns = [
 	path('monthly_spendings/<user_id>/', monthly_spendings, name='monthly_spendings'),
 	# Get all spending models for a user
 	path('ml_model/<user_id>/', all_models, name='all_models'),
+	path('generate_locations/', location_maker, name='location_maker'),
 ]
