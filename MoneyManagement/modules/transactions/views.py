@@ -1,5 +1,6 @@
 import pytz
 import calendar
+import random
 from datetime import datetime
 from datetime import timedelta
 
@@ -189,7 +190,7 @@ class TransactionViewSet(viewsets.ViewSet):
 			months = []
 			spendings = []
 			user = User.objects.get(user_id=user_id)
-			dt = datetime.datetime.now()
+			dt = datetime.now()
 			for i in range(12):
 				transactions = Transaction.objects.filter(user=user, sale_date__month=dt.month, sale_date__year=dt.year)
 				months = [(str(dt.month) + "/" + str(dt.year))] + months
@@ -221,6 +222,24 @@ class TransactionViewSet(viewsets.ViewSet):
 		monthly_spending = self.breakdown_monthly_spending(serializer.data)
 		return monthly_spending
 
+
+	def location_generator(self, request):
+		vendors = ["Amazon", "Sheetz", "Wegmans", "Tops", "Farmers Market", "Student Bookstore", "Fine Wine and Spirits", "Best Buy", "McDonalds", 
+					"Chick-fil-A", "Pizza Hut", "Texas Roadhouse", "Red Lobster", "AMC Theaters", "iTunes", "CVS", "Rite Aid", "Renter's Insurance",
+					"Vehicle Insurance", "Life Insurance", "Uber", "Lyft", "American Airlines", "Delta Airlines", "711", "Pepboys", "Buc-ees", 
+					"Auto Shop"]
+		cities = ["State College", "Pittsburgh", "Harrisburgh", "Erie", "Altoona", "Clearfield"]
+		zipcodes = ["16803", "15201", "17101", "16501", "16606", "84015"]
+		for vendor in vendors:
+			Location.objects.create(
+				vendor_name = vendor,
+				address_1 = " ",
+				address_2 = " ",
+				city = random.choice(cities),
+				state = "PA",
+				zipcode = random.choice(zipcodes)
+			)
+		return Response("Success")
 
 	def generator(self, request, user_type):
 		"""
